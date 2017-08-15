@@ -1,1 +1,1 @@
-select * from hello_world;
+select a.name from hello_world a;

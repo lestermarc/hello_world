@@ -1,6 +1,7 @@
 --------------------------------------------------------
 --  DDL for Function CHECKEXISTINTABLE
 --------------------------------------------------------
+--crap
 
   CREATE OR REPLACE FUNCTION "CHECKEXISTINTABLE" (
   aValue      in varchar2

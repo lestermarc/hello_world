@@ -1,0 +1,169 @@
+--------------------------------------------------------
+--  DDL for Procedure RPT_ACR_VAT_FORM
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "RPT_ACR_VAT_FORM" (
+   AREFCURSOR       IN OUT   CRYSTAL_CURSOR_TYPES.DUALCURSORTYP,
+   PROCUSER_LANID   IN       PCS.PC_LANG.LANID%TYPE,
+   PARAMETER_0       IN         VARCHAR2,
+   PARAMETER_1       IN         VARCHAR2,
+   PARAMETER_2       IN         VARCHAR2,
+   PARAMETER_3       IN         VARCHAR2,
+   PARAMETER_4       IN         VARCHAR2,
+   PARAMETER_5       IN         VARCHAR2,
+   PARAMETER_6      IN         VARCHAR2,
+   PARAMETER_7      IN         VARCHAR2,
+   PARAMETER_9      IN         VARCHAR2,
+   PARAMETER_10     IN         VARCHAR2,
+   PARAMETER_11     IN         VARCHAR2,
+   PARAMETER_12     IN         VARCHAR2,
+   PARAMETER_13     IN         VARCHAR2,
+   PARAMETER_14     IN         VARCHAR2,
+   PARAMETER_15     IN         VARCHAR2,
+   PARAMETER_16     IN         VARCHAR2
+)
+/**
+*Description
+
+ Used for report ACR_VAT_FORM
+*@created VHAAB 29.08.2011
+*@public
+*@PARAM parameter_0   Year(from)
+*@PARAM parameter_1   Month(from)
+*@PARAM parameter_2   Day(from)
+*@PARAM parameter_3   Year(to)
+*@PARAM parameter_4   Month(to)
+*@PARAM parameter_5   Day(to)
+*@PARAM parameter_6   ACC_NUMBER(from)
+*@PARAM parameter_7   ACC_NUMBER(to)
+*@PARAM parameter_9   Group by currency : '0'=No / '1'/Yes
+*@PARAM parameter_10  C_TYPE_CUMUL
+*@PARAM parameter_11  C_TYPE_CUMUL
+*@PARAM parameter_12  C_TYPE_CUMUL
+*@PARAM parameter_13  C_TYPE_CUMUL
+*@PARAM parameter_14  Def. print : 0=No / 1=Yes
+*@PARAM parameter_15  ACT_VAT_DET_ACCOUNT_ID
+*@PARAM parameter_16  ACS_VAT_DET_ACCOUNT_ID
+*/
+IS
+   VPC_LANG_ID   PCS.PC_LANG.PC_LANG_ID%TYPE; --user language id
+
+BEGIN
+
+
+IF PARAMETER_0 IS NOT NULL
+   THEN
+      ACT_FUNCTIONS.DATE_FROM :=
+         TO_DATE (   PARAMETER_0
+                  || LPAD (PARAMETER_1, 2, '0')
+                  || LPAD (PARAMETER_2, 2, '0'),
+                  'YYYYMMDD'
+                 );
+   END IF;
+
+   IF PARAMETER_3 IS NOT NULL
+   THEN
+      ACT_FUNCTIONS.DATE_TO :=
+         TO_DATE (   PARAMETER_3
+                  || LPAD (PARAMETER_4, 2, '0')
+                  || LPAD (PARAMETER_5, 2, '0'),
+                  'YYYYMMDD'
+                 );
+   END IF;
+
+   IF     (PARAMETER_15 IS NOT NULL)
+      AND (LENGTH (TRIM (PARAMETER_15)) > 0)
+      AND (PARAMETER_15 <> '0')
+   THEN
+      ACT_FUNCTIONS.VAT_DET_ACC_ID := PARAMETER_15;
+   END IF;
+
+   PCS.PC_I_LIB_SESSION.SETLANID (PROCUSER_LANID);
+   VPC_LANG_ID := PCS.PC_I_LIB_SESSION.GETUSERLANGID;
+
+OPEN AREFCURSOR FOR
+
+      SELECT
+             (SELECT CAT.CAT_DESCRIPTION
+                FROM ACJ_CATALOGUE_DOCUMENT CAT
+                WHERE ATD.ACJ_CATALOGUE_DOCUMENT_ID = CAT.ACJ_CATALOGUE_DOCUMENT_ID) CAT_DESCRIPTION,
+             ACC.ACC_NUMBER  ACC_NUMBER_TAX,
+             FIN.ACC_NUMBER  ACC_NUMBER_FIN,
+              (SELECT DES_DESCRIPTION_SUMMARY
+                FROM ACS_DESCRIPTION
+                WHERE ACS_VAT_DET_ACCOUNT_ID =  DET.ACS_VAT_DET_ACCOUNT_ID
+                 AND PC_LANG_ID = VPC_LANG_ID) DES_DESCRIPTION_SUMMARY,
+             FUR_LC.FIN_LOCAL_CURRENCY FIN_LOCAL_CURRENCY_LC,
+             FUR.FIN_LOCAL_CURRENCY FIN_LOCAL_CURRENCY,
+             (SELECT YEA.FYE_NO_EXERCICE
+                FROM ACS_FINANCIAL_YEAR YEA
+               WHERE  JOU.ACS_FINANCIAL_YEAR_ID = YEA.ACS_FINANCIAL_YEAR_ID)FYE_NO_EXERCICE,
+             TCO.ACS_TAX_CODE_ID,
+             DET.ACS_VAT_DET_ACCOUNT_ID,
+             ATD.DOC_NUMBER,
+             (SELECT ACT_VAT_DET_ACCOUNT_ID
+                FROM ACT_VAT_DET_ACCOUNT DET
+               WHERE  TAX.ACT_VAT_DET_ACCOUNT_ID = DET.ACT_VAT_DET_ACCOUNT_ID) ACT_VAT_DET_ACCOUNT_ID,
+             (SELECT VTD_NUMBER
+                FROM ACT_VAT_DET_ACCOUNT DET
+               WHERE  TAX.ACT_VAT_DET_ACCOUNT_ID = DET.ACT_VAT_DET_ACCOUNT_ID) VTD_NUMBER,
+             CUR.PC_CURR_ID,
+             CUR.CURRENCY,
+             CUR_LC.PC_CURR_ID PC_CURR_ID_LC,
+             CUR_LC.CURRENCY CURRENCY_LC,
+             TAX.TAX_INCLUDED_EXCLUDED,
+             TAX.TAX_RATE,
+             TAX.TAX_VAT_AMOUNT_FC,
+             TAX.TAX_VAT_AMOUNT_LC,
+             TAX.HT_LC,
+             TAX.TTC_LC,
+             TAX.HT_FC,
+             TAX.TTC_FC,
+             FIM.IMF_DESCRIPTION,
+             FIM.IMF_TRANSACTION_DATE,
+             FIM.C_GENRE_TRANSACTION,
+             JOU.JOU_NUMBER,
+             (SELECT DES_DESCRIPTION_SUMMARY
+                FROM ACS_DESCRIPTION
+                WHERE ACS_ACCOUNT_ID = ACC.ACS_ACCOUNT_ID AND PC_LANG_ID = VPC_LANG_ID) DES_DESCRIPTION_SUMMARY_ACC,
+             (SELECT DES_DESCRIPTION_SUMMARY
+                FROM ACS_DESCRIPTION
+                WHERE ACS_ACCOUNT_ID = FIN.ACS_ACCOUNT_ID AND PC_LANG_ID = VPC_LANG_ID) DES_DESCRIPTION_SUMMARY_FIN
+        FROM
+             ACS_ACCOUNT ACC,
+             ACS_ACCOUNT FIN,
+             ACS_FINANCIAL_CURRENCY FUR_LC,
+             ACS_FINANCIAL_CURRENCY FUR,
+             V_ACS_TAX_CODE TCO,
+             ACS_VAT_DET_ACCOUNT DET,
+             ACT_DOCUMENT ATD,
+             PCS.PC_CURR CUR,
+             PCS.PC_CURR CUR_LC,
+             V_ACT_DET_TAX_DATE TAX,
+             V_ACT_FIN_IMPUTATION_DATE FIM,
+             V_ACT_JOURNAL JOU
+       WHERE
+            TAX.ACT_FINANCIAL_IMPUTATION_ID = FIM.ACT_FINANCIAL_IMPUTATION_ID AND
+            FIM.ACT_DOCUMENT_ID = ATD.ACT_DOCUMENT_ID AND
+            ATD.ACT_JOB_ID = JOU.ACT_JOB_ID AND
+            FIM.ACS_FINANCIAL_ACCOUNT_ID = FIN.ACS_ACCOUNT_ID AND
+            FIM.ACS_FINANCIAL_CURRENCY_ID = FUR.ACS_FINANCIAL_CURRENCY_ID AND
+            FUR.PC_CURR_ID = CUR.PC_CURR_ID AND
+            FIM.ACS_ACS_FINANCIAL_CURRENCY_ID = FUR_LC.ACS_FINANCIAL_CURRENCY_ID AND
+            FUR_LC.PC_CURR_ID = CUR_LC.PC_CURR_ID AND
+            TAX.ACS_TAX_CODE_ID = TCO.ACS_TAX_CODE_ID AND
+            TCO.ACS_TAX_CODE_ID = ACC.ACS_ACCOUNT_ID AND
+            TCO.ACS_VAT_DET_ACCOUNT_ID = DET.ACS_VAT_DET_ACCOUNT_ID AND
+            TCO.PC_LANG_ID = VPC_LANG_ID AND
+            JOU.C_SUB_SET = 'ACC' AND
+            ACC.ACC_NUMBER >= PARAMETER_6 AND
+            ACC.ACC_NUMBER <= PARAMETER_7 AND
+            ((PARAMETER_10 = '1' AND TAX.C_TYPE_CUMUL = 'INT')
+                OR (PARAMETER_11 = '1' AND TAX.C_TYPE_CUMUL = 'EXT')
+                 OR (PARAMETER_12 = '1' AND TAX.C_TYPE_CUMUL = 'PRE')
+                OR (PARAMETER_13 = '1' AND TAX.C_TYPE_CUMUL = 'ENG')) AND
+            nvl(TAX.TAX_TMP_VAT_ENCASHMENT, 0) = 0 AND
+            DET.ACS_VAT_DET_ACCOUNT_ID = TO_NUMBER(PARAMETER_16);
+
+END RPT_ACR_VAT_FORM;

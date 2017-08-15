@@ -1,0 +1,17 @@
+--------------------------------------------------------
+--  DDL for Procedure FAL_WEIGH_MV_REFRESH
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "FAL_WEIGH_MV_REFRESH" 
+is
+
+begin
+  DBMS_SNAPSHOT.REFRESH('MV_FAL_WEIGH');
+  DBMS_SNAPSHOT.REFRESH('MV_FWE_INV_POIDS_MAT');
+  DBMS_SNAPSHOT.REFRESH('MV_FWE_LOSS_BY_LOT');
+  DBMS_SNAPSHOT.REFRESH('MV_FWE_LOSS_BY_OPE');
+  DBMS_SNAPSHOT.REFRESH('MV_FWE_LOSS_BY_POSITION');
+  DBMS_SNAPSHOT.REFRESH('MV_FWE_LOSS_BY_PRODUCT');
+
+end FAL_WEIGH_MV_REFRESH;

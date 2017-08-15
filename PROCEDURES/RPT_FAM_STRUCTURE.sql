@@ -1,0 +1,55 @@
+--------------------------------------------------------
+--  DDL for Procedure RPT_FAM_STRUCTURE
+--------------------------------------------------------
+set define off;
+
+  CREATE OR REPLACE PROCEDURE "RPT_FAM_STRUCTURE" (
+ aRefCursor       in out CRYSTAL_CURSOR_TYPES.DualCursorTyp,
+ PROCUSER_LANID   in     pcs.pc_lang.lanid%type
+)
+IS
+
+/**
+*Description
+Used for report FAM_STRUCTURE
+
+*author JLI
+*lastUpdate July 23 2009
+* @public
+*/
+
+VPC_LANG_ID pcs.pc_lang.pc_lang_id%type;
+
+
+BEGIN
+
+
+pcs.PC_I_LIB_SESSION.setLanId (procuser_lanid);
+VPC_LANG_ID:= pcs.PC_I_LIB_SESSION.GetUserLangId;
+
+
+
+open aRefCursor for
+
+SELECT
+DET.C_FAM_TRANSACTION_TYP,
+STR.FAM_STRUCTURE_ID,
+STR.STR_DESCRIPTION,
+ELE.FAM_STRUCTURE_ELEMENT_ID,
+ELE.ELE_DESCRIPTION,
+ELE.ELE_SEQUENCE,
+TRA.PC_LANG_ID,
+TRA.TRA_DESCRIPTION
+FROM
+FAM_ELEMENT_DETAIL DET,
+FAM_STRUCTURE STR,
+FAM_STRUCTURE_ELEMENT ELE,
+FAM_TRADUCTION TRA
+WHERE
+STR.FAM_STRUCTURE_ID = ELE.FAM_STRUCTURE_ID
+AND ELE.FAM_STRUCTURE_ELEMENT_ID = DET.FAM_STRUCTURE_ELEMENT_ID
+AND ELE.FAM_STRUCTURE_ELEMENT_ID = TRA.FAM_STRUCTURE_ELEMENT_ID(+)
+AND TRA.PC_LANG_ID = VPC_LANG_ID
+;
+
+END RPT_FAM_STRUCTURE;

@@ -9,6 +9,7 @@
 )
   return number
 /**
+* Demo Yannick
 * function checkExistInTable
 * Description
 *   Test l'existance d'une liste de valeur dans une table
